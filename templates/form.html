@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reimbursement Form</title>
+    <script>
+        function addAmountField() {
+            const container = document.getElementById('amountFields');
+            const fieldHTML = `
+                <div style="margin-bottom: 10px;">
+                    <label style="margin-right: 5px;">Amount: </label>
+                    <input type="text" name="amount" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc;">
+                    <label style="margin-right: 5px;">Description: </label>
+                    <input type="text" name="description" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc;">
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', fieldHTML);
+        }
+    </script>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 20px;">
+
+    <h2 style="color: #2c3e50;">Reimbursement Form</h2>
+
+    <form action="/submit" method="POST" style="border: 1px solid #bdc3c7; padding: 20px; border-radius: 5px; background-color: #ecf0f1;">
+
+        <label style="display: block; margin-bottom: 5px;">Employee ID:</label>
+        <input type="text" name="employee_id" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 100%; box-sizing: border-box;"><br><br>
+
+        <label style="display: block; margin-bottom: 5px;">Name:</label>
+        <input type="text" name="name" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 100%; box-sizing: border-box;"><br><br>
+
+        <label style="display: block; margin-bottom: 5px;">Date:</label>
+        <input type="date" name="date" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 100%; box-sizing: border-box;"><br><br>
+
+        <div id="amountFields">
+            <div style="margin-bottom: 10px;">
+                <label style="margin-right: 5px;">Amount:</label>
+                <input type="text" name="amount" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc;">
+                <label style="margin-right: 5px;">Description:</label>
+                <input type="text" name="description" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc;">
+            </div>
+        </div>
+
+        <button type="button" onclick="addAmountField()" style="background-color: #3498db; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">Add Another Amount</button><br><br>
+
+        <input type="submit" value="Submit" style="background-color: #2ecc71; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">
+    </form>
+</body>
+</html>
