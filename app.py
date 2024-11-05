@@ -1,20 +1,24 @@
 from flask import Flask, request, render_template, send_file, jsonify
 import sqlite3
-from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.platypus import Table, TableStyle
 import io
+
 
 app = Flask(__name__)
 
-
+DATABASE_PATH = '/tmp/reimbursements.db'
 # Function to connect to the database
 def connect_db():
-    return sqlite3.connect('reimbursements.db')
+    return sqlite3.connect(DATABASE_PATH)
 
 
 # Function to generate a unique serial number starting with "DIGREIM"
 def generate_serial_number():
-    prefix = "DIGREIM"
+    prefix = "DIGMA"
     conn = connect_db()
     cursor = conn.cursor()
     # Query to find the last serial number that starts with "DIGREIM"
@@ -41,35 +45,52 @@ def create_pdf(data):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
 
-    # Set up the title and headings with styling
-    c.setFont("Helvetica-Bold", 16)
+    # Set up the title with styling
+    c.setFont("Helvetica-Bold", 18)
     c.drawString(100, 750, "Reimbursement Form")
 
+    # Header information
     c.setFont("Helvetica", 12)
     c.drawString(100, 720, f"Serial Number: {data['serial_number']}")
     c.drawString(100, 700, f"Employee ID: {data['employee_id']}")
     c.drawString(100, 680, f"Name: {data['name']}")
     c.drawString(100, 660, f"Date: {data['date']}")
 
-    # Draw a line for separation
+    # Line for separation
     c.line(100, 650, 500, 650)
 
-    # Add amounts and descriptions
-    c.setFont("Helvetica", 10)
-    y_position = 630
-    c.drawString(100, y_position, "Reimbursement Details:")
-    y_position -= 20  # Move down for the next entry
+    # Title for the table
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(100, 630, "Reimbursement Details:")
 
+    # Table for reimbursement details
+    table_data = [["Amount", "Description"]]  # Table header
     for amount_data in data['amounts']:
-        c.drawString(100, y_position,
-                     f"Amount: ${amount_data['amount']:.2f} - Description: {amount_data['description']}")
-        y_position -= 15  # Move down for the next amount entry
+        table_data.append([f"${amount_data['amount']:.2f}", amount_data['description']])
 
-    # Ensure the content fits on the page
-    if y_position < 50:
-        c.showPage()  # Start a new page if necessary
-        y_position = 750  # Reset the Y position for the new page
+    # Create and style the table
+    table = Table(table_data, colWidths=[1.5 * inch, 4 * inch])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),  # Header background color
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # Header text color
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Center alignment for all cells
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Header font
+        ('FONTSIZE', (0, 0), (-1, -1), 10),  # Font size for all cells
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # Padding for header
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),  # Body background color
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),  # Grid lines for the table
+    ]))
 
+    # Draw the table on the canvas
+    table.wrapOn(c, 0, 0)
+    table.drawOn(c, 100, 500)  # Adjust Y position as needed
+
+    # Footer with signature area
+    c.setFont("Helvetica", 10)
+    c.drawString(100, 450, "Signature: ________________________")
+    c.drawString(100, 430, "Date: _____________________________")
+
+    # Save the PDF and return the buffer
     c.save()
     buffer.seek(0)
     return buffer
