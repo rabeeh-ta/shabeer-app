@@ -94,8 +94,8 @@ bold_font_path = os.path.join(base_path, 'fonts', 'DejaVuSans-Bold.ttf')
 regular_font_path = os.path.join(base_path, 'fonts', 'DejaVuSans.ttf')
 
 # Register the fonts
-pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', "/Users/shabeer/Desktop/shabeer-app/fonts/DejaVuSans-Bold.ttf"))
-pdfmetrics.registerFont(TTFont('DejaVuSans', "/Users/shabeer/Desktop/shabeer-app/fonts/DejaVuSans.ttf"))
+pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', bold_font_path))
+pdfmetrics.registerFont(TTFont('DejaVuSans', regular_font_path))
 
 def create_pdf(data):
     buffer = io.BytesIO()
