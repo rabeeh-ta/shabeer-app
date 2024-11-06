@@ -139,7 +139,7 @@ filename = f"{data['serial_number']}.pdf"
 c.save()
 buffer.seek(0)
 
- return buffer, filename
+return buffer, filename
 
 
    
