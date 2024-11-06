@@ -17,13 +17,29 @@
             `;
             container.insertAdjacentHTML('beforeend', fieldHTML);
         }
+
+        function validateForm(event) {
+            const amountFields = document.getElementsByName('amount');
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = '';  // Clear any previous error message
+
+            for (let field of amountFields) {
+                if (isNaN(field.value) || field.value.trim() === '') {
+                    // If the field is not a number or is empty, prevent form submission and show an error
+                    errorMessage.textContent = 'Please enter only numeric values in the Amount fields.';
+                    event.preventDefault();
+                    return false;
+                }
+            }
+            return true;  // Allow form submission if all checks pass
+        }
     </script>
 </head>
 <body style="font-family: Arial, sans-serif; margin: 20px;">
 
     <h2 style="color: #2c3e50;">Digma Bills</h2>
 
-    <form action="/submit" method="POST" style="border: 1px solid #bdc3c7; padding: 20px; border-radius: 5px; background-color: #ecf0f1;">
+    <form action="/submit" method="POST" onsubmit="validateForm(event)" style="border: 1px solid #bdc3c7; padding: 20px; border-radius: 5px; background-color: #ecf0f1;">
 
         <label style="display: block; margin-bottom: 5px;">Employee ID:</label>
         <input type="text" name="employee_id" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 100%; box-sizing: border-box;"><br><br>
@@ -44,6 +60,8 @@
         </div>
 
         <button type="button" onclick="addAmountField()" style="background-color: #3498db; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">Add Another Amount</button><br><br>
+
+        <div id="error-message" style="color: red; margin-bottom: 10px;"></div>
 
         <input type="submit" value="Submit" style="background-color: #2ecc71; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">
     </form>

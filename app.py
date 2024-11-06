@@ -47,7 +47,7 @@ def create_pdf(data):
 
     # Set up the title with styling
     c.setFont("Helvetica-Bold", 18)
-    c.drawString(100, 750, "Reimbursement Form")
+    c.drawString(100, 750, "Digma Bills")
 
     # Header information
     c.setFont("Helvetica", 12)
