@@ -81,34 +81,8 @@ def create_pdf(data):
     c.line(100, 650, 500, 650)
 
     # Table for reimbursement details
-    table = Table(table_data, colWidths=col_widths)
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'DejaVuSans-Bold'),
-        ('FONTNAME', (0, 1), (-1, -1), 'DejaVuSans'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-    ]))
+    
 
-    # Calculate total width of the table and set position for centering with margin
-    table_width = sum(col_widths)
-    page_width = letter[0]
-    margin = 0.5 * inch  # Space on each side (you can adjust this)
-
-    # Ensure the table with margins doesn't exceed the page width
-    if table_width + 2 * margin > page_width:
-        margin = (page_width - table_width) / 2  # Adjust margin if needed
-
-    # Calculate x_position for centering the table
-    x_position = (page_width - table_width) / 2
-
-    # Draw the table centered with margins
-    table.wrapOn(c, 0, 0)
-    table.drawOn(c, x_position, 450)
 
     c.setFont("DejaVuSans-Bold", 12)
     c.drawString(100, 250, f"Total: ₹{total_amount:.2f}")
