@@ -81,7 +81,53 @@ def create_pdf(data):
     c.line(100, 650, 500, 650)
 
     # Table for reimbursement details
-    
+    table_data = [["Date", "Description", "Brand", "Amount"]]
+total_amount = 0  # Initialize the total_amount
+for amount_data in data['amounts']:
+    table_data.append([
+        data['date'],
+        amount_data['description'],
+        amount_data['brand'],
+        f"₹{amount_data['amount']:.2f}"
+    ])
+    total_amount += amount_data['amount']  # Accumulate the total amount
+
+# Define column widths with space on both sides
+col_widths = [1.25 * inch, 3.5 * inch, 1.75 * inch, 1.75 * inch]
+
+# Create and style the table
+table = Table(table_data, colWidths=col_widths)
+table.setStyle(TableStyle([
+    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+    ('FONTNAME', (0, 0), (-1, 0), 'DejaVuSans-Bold'),
+    ('FONTNAME', (0, 1), (-1, -1), 'DejaVuSans'),
+    ('FONTSIZE', (0, 0), (-1, -1), 10),
+    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+    ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+]))
+
+# Calculate total width of the table and set position for centering with margin
+table_width = sum(col_widths)
+page_width = letter[0]
+margin = 0.5 * inch  # Space on each side (you can adjust this)
+
+# Ensure the table with margins doesn't exceed the page width
+if table_width + 2 * margin > page_width:
+    margin = (page_width - table_width) / 2  # Adjust margin if needed
+
+# Calculate x_position for centering the table
+x_position = (page_width - table_width) / 2
+
+# Draw the table centered with margins
+table.wrapOn(c, 0, 0)
+table.drawOn(c, x_position, 450)
+
+# Optionally, display the total amount somewhere (e.g., at the bottom)
+# You can add it to the document if needed
+# Example: c.drawString(x_position, 50, f"Total Amount: ₹{total_amount:.2f}")
 
 
     c.setFont("DejaVuSans-Bold", 12)
