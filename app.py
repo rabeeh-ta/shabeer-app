@@ -128,20 +128,21 @@ table.drawOn(c, x_position, 450)
 # Optionally, display the total amount somewhere (e.g., at the bottom)
 # You can add it to the document if needed
 # Example: c.drawString(x_position, 50, f"Total Amount: ₹{total_amount:.2f}")
+c.setFont("DejaVuSans-Bold", 12)
+c.drawString(100, 250, f"Total: ₹{total_amount:.2f}")
+
+c.setFont("DejaVuSans", 10)
+c.drawString(100, 230, "Signature: ________________________")
+c.drawString(100, 210, "Date: _____________________________")
+
+filename = f"{data['serial_number']}.pdf"
+c.save()
+buffer.seek(0)
+
+ return buffer, filename
 
 
-    c.setFont("DejaVuSans-Bold", 12)
-    c.drawString(100, 250, f"Total: ₹{total_amount:.2f}")
-
-    c.setFont("DejaVuSans", 10)
-    c.drawString(100, 230, "Signature: ________________________")
-    c.drawString(100, 210, "Date: _____________________________")
-
-    filename = f"{data['serial_number']}.pdf"
-    c.save()
-    buffer.seek(0)
-
-    return buffer, filename
+   
 
 @app.route('/')
 def form():
