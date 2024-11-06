@@ -21,26 +21,62 @@ def generate_serial_number():
     prefix = "DIGMA"
     conn = connect_db()
     cursor = conn.cursor()
-    # Query to find the last serial number that starts with "DIGREIM"
+
+    # Query to find the last serial number starting with "DIGMA"
     cursor.execute(
         "SELECT serial_number FROM reimbursements WHERE serial_number LIKE ? ORDER BY serial_number DESC LIMIT 1",
-        (prefix + '%',))
-    last_serial = cursor.fetchone()
+        (prefix + '%',)
+    )
+
+    last_serial = cursor.fetchone()  # Get the last serial number
+    print("Last serial fetched from DB:", last_serial)  # Debugging: Check what's returned
 
     if last_serial:
-        # Extract the numeric part and increment it
-        last_number = int(last_serial[0][len(prefix):])  # Strip prefix and convert to int
-        next_number = last_number + 1
+        # Extract the numeric part of the serial number and increment it
+        last_number = int(last_serial[0][len(prefix):])  # Strip "DIGMA" and convert to int
+        next_number = last_number + 1  # Increment the last serial number
     else:
-        next_number = 1  # Start from 1 if no previous serial number is found
+        # Start from 1 if no previous serial number is found
+        next_number = 1
 
-    # Format the new serial number
-    new_serial_number = f"{prefix}{next_number:04d}"  # Pads the number with zeros to 4 digits
+    # Format the new serial number (e.g., DIGMA0006)
+    new_serial_number = f"{prefix}{next_number:04d}"
+    print("Generated new serial number:", new_serial_number)  # Debugging: Check the new serial number
+
+    # Commit the generated serial number to the database to make sure it's saved
+    cursor.execute(
+        "INSERT INTO reimbursements (serial_number) VALUES (?)",
+        (new_serial_number,)
+    )
+    conn.commit()  # Ensure the new serial number is saved to the database
+
     conn.close()
     return new_serial_number
 
 
 # Function to generate a PDF
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.pdfgen import canvas
+import io
+
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.pdfgen import canvas
+import io
+
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib import colors
+import io
+from reportlab.lib.units import inch
+
+
 def create_pdf(data):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
@@ -54,7 +90,6 @@ def create_pdf(data):
     c.drawString(100, 720, f"Serial Number: {data['serial_number']}")
     c.drawString(100, 700, f"Employee ID: {data['employee_id']}")
     c.drawString(100, 680, f"Name: {data['name']}")
-    c.drawString(100, 660, f"Date: {data['date']}")
 
     # Line for separation
     c.line(100, 650, 500, 650)
@@ -64,12 +99,22 @@ def create_pdf(data):
     c.drawString(100, 630, "Reimbursement Details:")
 
     # Table for reimbursement details
-    table_data = [["Amount", "Description"]]  # Table header
+    table_data = [["Date", "Amount", "Description", "Brand"]]  # Move Date to the first column
+    total_amount = 0
     for amount_data in data['amounts']:
-        table_data.append([f"${amount_data['amount']:.2f}", amount_data['description']])
+        table_data.append([
+            data['date'],  # Date field now before Amount
+            f"${amount_data['amount']:.2f}",
+            amount_data['description'],
+            amount_data['brand']
+        ])
+        total_amount += amount_data['amount']  # Sum the amounts for the total
+
+    # Define column widths (adjusted for the new column order)
+    col_widths = [2 * inch, 1.5 * inch, 4 * inch, 2 * inch]  # Adjust width for Date column
 
     # Create and style the table
-    table = Table(table_data, colWidths=[1.5 * inch, 4 * inch])
+    table = Table(table_data, colWidths=col_widths)
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),  # Header background color
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # Header text color
@@ -81,21 +126,37 @@ def create_pdf(data):
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),  # Grid lines for the table
     ]))
 
+    # Calculate table width and position to center it
+    table_width = sum(col_widths)
+    page_width = letter[0]  # 612 points (default letter size width)
+    x_position = (page_width - table_width) / 2  # Calculate the x-position to center the table
+
     # Draw the table on the canvas
     table.wrapOn(c, 0, 0)
-    table.drawOn(c, 100, 500)  # Adjust Y position as needed
+    table.drawOn(c, x_position, 450)  # Position the table in the center
+
+    # Display total amount below the table
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(100, 250, f"Total: ${total_amount:.2f}")  # Adjust Y position for the total field
 
     # Footer with signature area
     c.setFont("Helvetica", 10)
-    c.drawString(100, 450, "Signature: ________________________")
-    c.drawString(100, 430, "Date: _____________________________")
+    c.drawString(100, 230, "Signature: ________________________")
+    c.drawString(100, 210, "Date: _____________________________")
 
-    # Save the PDF and return the buffer
+    # Generate the filename based on the serial number
+    filename = f"{data['serial_number']}.pdf"
+
+    # Save the PDF and return the buffer and filename
     c.save()
     buffer.seek(0)
-    return buffer
+
+    return buffer, filename  # Return both the buffer and filename
 
 
+# Return both the buffer and filename
+
+# Return both the buffer and filename
 # Route for the HTML form
 @app.route('/')
 def form():
@@ -105,54 +166,40 @@ def form():
 # Route to handle form submission
 # Route to handle form submission
 @app.route('/submit', methods=['POST'])
+@app.route('/submit', methods=['POST'])
+@app.route('/submit', methods=['POST'])
+@app.route('/submit', methods=['POST'])
+
 def submit():
-    # Retrieve form data
-    employee_id = request.form['employee_id']
-    name = request.form['name']
-    date = request.form['date']
-    descriptions = request.form.getlist('description')
-    amounts = request.form.getlist('amount')
-
-    # Convert amounts to floats
-    amounts = [float(amt) for amt in amounts]
-
-    # Generate a serial number
+    # Generate the serial number with the "DIGMA" prefix
     serial_number = generate_serial_number()
 
-    # Save to reimbursements table
-    conn = connect_db()
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO reimbursements (employee_id, name, date, serial_number) VALUES (?, ?, ?, ?)",
-        (employee_id, name, date, serial_number)
-    )
-    reimbursement_id = cursor.lastrowid
-
-    # Save each amount and description to the reimbursement_amounts table
-    for desc, amt in zip(descriptions, amounts):
-        cursor.execute(
-            "INSERT INTO reimbursement_amounts (reimbursement_id, amount, description) VALUES (?, ?, ?)",
-            (reimbursement_id, amt, desc)  # amt is already a float
-        )
-
-    conn.commit()
-    conn.close()
-
-    # Prepare data for PDF
-    pdf_data = {
-        'employee_id': employee_id,
-        'name': name,
-        'date': date,
-        'serial_number': serial_number,
-        'amounts': [{'amount': amt, 'description': desc} for amt, desc in zip(amounts, descriptions)]
+    # Collecting data from the form
+    data = {
+        'serial_number': serial_number,  # Serial number with DIGMA prefix
+        'employee_id': request.form['employee_id'],
+        'name': request.form['name'],
+        'date': request.form['date'],  # Get the date from the form
+        'amounts': []
     }
-    pdf_buffer = create_pdf(pdf_data)
 
-    # Return the PDF as a downloadable file
-    return send_file(pdf_buffer, as_attachment=True, download_name=f"reimbursement_{serial_number}.pdf",
-                     mimetype='application/pdf')
+    # Collecting the amounts, descriptions, and brands from the form
+    for i in range(len(request.form.getlist('amount'))):
+        amount = request.form.getlist('amount')[i]
+        description = request.form.getlist('description')[i]
+        brand = request.form.getlist('brand')[i] if 'brand' in request.form else 'N/A'
 
+        data['amounts'].append({
+            'amount': float(amount),
+            'description': description,
+            'brand': brand
+        })
 
+    # Pass the data to the PDF creation function
+    pdf_buffer, filename = create_pdf(data)  # Unpack the tuple into pdf_buffer and filename
+
+    # Return the PDF as a response
+    return send_file(pdf_buffer, as_attachment=True, download_name=filename, mimetype='application/pdf')
 def setup_database():
     # Ensure the database and tables are set up correctly
     conn = connect_db()
@@ -172,7 +219,8 @@ def setup_database():
     conn.commit()
     conn.close()
 
-
+new_serial_number = generate_serial_number()
+print("Generated serial number:", new_serial_number)
 if __name__ == '__main__':
     setup_database()
     app.run(host='0.0.0.0', port=8080, debug=True)

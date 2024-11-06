@@ -7,15 +7,39 @@
     <script>
         function addAmountField() {
             const container = document.getElementById('amountFields');
+            const fieldId = `field-${Date.now()}`; // Unique ID for each field container
+
             const fieldHTML = `
-                <div style="margin-bottom: 10px;">
-                    <label style="margin-right: 5px;">Amount: </label>
-                    <input type="text" name="amount" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc;">
-                    <label style="margin-right: 5px;">Description: </label>
-                    <input type="text" name="description" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc;">
+                <div id="${fieldId}" style="margin-bottom: 10px; display: flex; align-items: center;">
+                    <label style="margin-right: 5px;">Amount:</label>
+                    <input type="text" name="amount" required oninput="updateTotal()" style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 60%; box-sizing: border-box;">
+                    <label style="margin-right: 5px;">Description:</label>
+                    <input type="text" name="description" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 60%; box-sizing: border-box;">
+                    <label style="margin-right: 5px;">Brand:</label>
+                    <input type="text" name="brand" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 60%; box-sizing: border-box;">
+                    <button type="button" onclick="removeField('${fieldId}')" style="background: none; border: none; font-size: 20px; color: #e74c3c; cursor: pointer; margin-left: 10px;">&times;</button>
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', fieldHTML);
+        }
+
+        function removeField(fieldId) {
+            const field = document.getElementById(fieldId);
+            field.remove();
+            updateTotal();  // Update total when a field is removed
+        }
+
+        function updateTotal() {
+            const amountFields = document.getElementsByName('amount');
+            let total = 0;
+
+            for (let field of amountFields) {
+                const amount = parseFloat(field.value) || 0;
+                total += amount;
+            }
+
+            // Display total amount
+            document.getElementById('totalAmount').textContent = `Total: ₹${total.toFixed(2)}`;
         }
 
         function validateForm(event) {
@@ -51,17 +75,21 @@
         <input type="date" name="date" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 100%; box-sizing: border-box;"><br><br>
 
         <div id="amountFields">
-            <div style="margin-bottom: 10px;">
+            <div style="margin-bottom: 10px; display: flex; align-items: center;">
                 <label style="margin-right: 5px;">Amount:</label>
-                <input type="text" name="amount" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc;">
+                <input type="text" name="amount" required oninput="updateTotal()" style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 60%; box-sizing: border-box;">
                 <label style="margin-right: 5px;">Description:</label>
-                <input type="text" name="description" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc;">
+                <input type="text" name="description" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 60%; box-sizing: border-box;">
+                <label style="margin-right: 5px;">Brand:</label>
+                <input type="text" name="brand" required style="padding: 5px; border-radius: 3px; border: 1px solid #ccc; width: 60%; box-sizing: border-box;">
             </div>
         </div>
 
         <button type="button" onclick="addAmountField()" style="background-color: #3498db; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">Add Another Amount</button><br><br>
 
         <div id="error-message" style="color: red; margin-bottom: 10px;"></div>
+
+        <div id="totalAmount" style="font-weight: bold; margin-top: 10px;">Total: ₹0.00</div><br>
 
         <input type="submit" value="Submit" style="background-color: #2ecc71; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">
     </form>
