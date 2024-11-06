@@ -81,18 +81,6 @@ def create_pdf(data):
     c.line(100, 650, 500, 650)
 
     # Table for reimbursement details
-    table_data = [["Date", "Description", "Brand", "Amount"]]
-    total_amount = 0
-    for amount_data in data['amounts']:
-        table_data.append([
-            data['date'],
-            amount_data['description'],
-            amount_data['brand'],
-            f"₹{amount_data['amount']:.2f}"
-        ])
-        total_amount += amount_data['amount']
-
-    col_widths = [1.5 * inch, 4 * inch, 2 * inch, 2 * inch]
     table = Table(table_data, colWidths=col_widths)
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
@@ -106,8 +94,19 @@ def create_pdf(data):
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
     ]))
 
+    # Calculate total width of the table and set position for centering with margin
     table_width = sum(col_widths)
-    x_position = (letter[0] - table_width) / 2
+    page_width = letter[0]
+    margin = 0.5 * inch  # Space on each side (you can adjust this)
+
+    # Ensure the table with margins doesn't exceed the page width
+    if table_width + 2 * margin > page_width:
+        margin = (page_width - table_width) / 2  # Adjust margin if needed
+
+    # Calculate x_position for centering the table
+    x_position = (page_width - table_width) / 2
+
+    # Draw the table centered with margins
     table.wrapOn(c, 0, 0)
     table.drawOn(c, x_position, 450)
 
