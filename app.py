@@ -61,32 +61,52 @@ from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.pdfgen import canvas
 import io
-
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.pdfgen import canvas
 import io
-
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Table, TableStyle
 from reportlab.lib import colors
 import io
 from reportlab.lib.units import inch
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib import colors
+import io
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Table, TableStyle
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics  # Import pdfmetrics to register the fonts
+import os
+import io
 
+# Specify the base path and font paths
+base_path = os.path.dirname(__file__)  # Get the current script's directory
+bold_font_path = os.path.join(base_path, 'fonts', 'DejaVuSans-Bold.ttf')
+regular_font_path = os.path.join(base_path, 'fonts', 'DejaVuSans.ttf')
+
+# Register the fonts
+pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', "/Users/shabeer/Desktop/shabeer-app/fonts/DejaVuSans-Bold.ttf"))
+pdfmetrics.registerFont(TTFont('DejaVuSans', "/Users/shabeer/Desktop/shabeer-app/fonts/DejaVuSans.ttf"))
 
 def create_pdf(data):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
 
-    # Set up the title with styling
-    c.setFont("Helvetica-Bold", 18)
+    # Set the font for the title and other important sections
+    c.setFont("DejaVuSans-Bold", 18)
     c.drawString(100, 750, "Digma Bills")
 
-    # Header information
-    c.setFont("Helvetica", 12)
+    # Header information (use DejaVuSans-Bold for headers)
+    c.setFont("DejaVuSans-Bold", 12)
     c.drawString(100, 720, f"Serial Number: {data['serial_number']}")
     c.drawString(100, 700, f"Employee ID: {data['employee_id']}")
     c.drawString(100, 680, f"Name: {data['name']}")
@@ -94,53 +114,52 @@ def create_pdf(data):
     # Line for separation
     c.line(100, 650, 500, 650)
 
-    # Title for the table
-    c.setFont("Helvetica-Bold", 12)
+    # Title for the table (bold font)
+    c.setFont("DejaVuSans-Bold", 12)
     c.drawString(100, 630, "Reimbursement Details:")
 
-    # Table for reimbursement details
-    table_data = [["Date", "Amount", "Description", "Brand"]]  # Move Date to the first column
+    # Table for reimbursement details (Date column before Amount column)
+    table_data = [["Date", "Description", "Brand", "Amount"]]  # Reordered columns with "Date" before "Amount"
     total_amount = 0
     for amount_data in data['amounts']:
         table_data.append([
-            data['date'],  # Date field now before Amount
-            f"${amount_data['amount']:.2f}",
+            data['date'],  # Date field first
             amount_data['description'],
-            amount_data['brand']
+            amount_data['brand'],
+            f"₹{amount_data['amount']:.2f}"  # Amount with ₹ symbol
         ])
         total_amount += amount_data['amount']  # Sum the amounts for the total
 
-    # Define column widths (adjusted for the new column order)
-    col_widths = [2 * inch, 1.5 * inch, 4 * inch, 2 * inch]  # Adjust width for Date column
+    # Define column widths
+    col_widths = [1.5 * inch, 4 * inch, 2 * inch, 2 * inch]
 
     # Create and style the table
     table = Table(table_data, colWidths=col_widths)
+
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),  # Header background color
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # Header text color
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Center alignment for all cells
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Header font
+        ('FONTNAME', (0, 0), (-1, 0), 'DejaVuSans-Bold'),  # Header font (bold)
+        ('FONTNAME', (0, 1), (-1, -1), 'DejaVuSans'),  # Apply 'DejaVuSans' font to all table cells (data rows)
         ('FONTSIZE', (0, 0), (-1, -1), 10),  # Font size for all cells
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # Padding for header
         ('BACKGROUND', (0, 1), (-1, -1), colors.beige),  # Body background color
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),  # Grid lines for the table
     ]))
 
-    # Calculate table width and position to center it
+    # Center the table by adjusting the X position
     table_width = sum(col_widths)
-    page_width = letter[0]  # 612 points (default letter size width)
-    x_position = (page_width - table_width) / 2  # Calculate the x-position to center the table
-
-    # Draw the table on the canvas
+    x_position = (letter[0] - table_width) / 2  # Center horizontally on the page
     table.wrapOn(c, 0, 0)
-    table.drawOn(c, x_position, 450)  # Position the table in the center
+    table.drawOn(c, x_position, 450)  # Adjust Y position to fit the table correctly
 
-    # Display total amount below the table
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(100, 250, f"Total: ${total_amount:.2f}")  # Adjust Y position for the total field
+    # Display total amount below the table (bold font for emphasis)
+    c.setFont("DejaVuSans-Bold", 12)
+    c.drawString(100, 250, f"Total: ₹{total_amount:.2f}")  # Using Unicode for ₹
 
     # Footer with signature area
-    c.setFont("Helvetica", 10)
+    c.setFont("DejaVuSans", 10)  # Use regular font for footer text
     c.drawString(100, 230, "Signature: ________________________")
     c.drawString(100, 210, "Date: _____________________________")
 
@@ -151,11 +170,7 @@ def create_pdf(data):
     c.save()
     buffer.seek(0)
 
-    return buffer, filename  # Return both the buffer and filename
-
-
-# Return both the buffer and filename
-
+    return buffer, filename
 # Return both the buffer and filename
 # Route for the HTML form
 @app.route('/')
